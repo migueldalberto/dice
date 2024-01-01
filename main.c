@@ -1,9 +1,8 @@
-#include <unistd.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "random.h"
 
 int arg_count = 0;
 char *args[10];
@@ -31,16 +30,13 @@ void handle_args (int argc, char **argv) {
 int main (int argc, char **argv) {
 	handle_args(argc, argv);
 
-
 	if (arg_count == 0) {
 		fprintf(stderr, "no dice specified, try d6 or 2d20\n");
 		return 1;
 	}
 
-	int fd = open("/dev/random", O_RDONLY);
-  
-	if (fd < 0) {
-		fprintf(stderr, "could not open /dev/random\n");
+	if (init_random() < 0) {
+		fprintf(stderr, "failed to initialize pseudorng\n");
 		return 1;
 	}
 
@@ -93,16 +89,14 @@ int main (int argc, char **argv) {
 		printf("%s -> ", dice_cmd);
 
 		for (int k = 0; k < number_of_dice; ++k) {
-			unsigned int buf[1];
-			size_t count = sizeof(buf);
-			ssize_t n = read(fd, &buf, count);
+			unsigned int random_number;
 
-			if (n == 0) {
-				fprintf(stderr, "failed reading /dev/random\n");
+			if (get_random_uint(&random_number) < 0) {
+				fprintf(stderr, "pseudorng failed :(\n");
 				return 1;
 			}
 
-			unsigned int res = (buf[0] % number_of_sides) + 1;
+			int res = (random_number % number_of_sides) + 1;
 			sum += res;
 
 			printf("%d ", res);
@@ -119,7 +113,7 @@ int main (int argc, char **argv) {
 		printf(result_str);
 	}
 
-	close(fd);
+	end_random();
 
 	return 0;
 }
