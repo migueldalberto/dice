@@ -8,13 +8,12 @@
 int arg_count = 0;
 char *args[10];
 
-int main (int argc, char **argv) {
-
+void handle_args (int argc, char **argv) {
 	for (int i = 1; i < argc; ++i) {
 		if (argv[i][0] == '-') {
 			int j = 1;
 
-			// the following is for implementing flags, maybe in the future
+			// the following is for implementing flags, maybe an advantage flag
 			while (argv[i][j] != '\0') {
 				switch (argv[i][j]) {
 					default:
@@ -27,6 +26,11 @@ int main (int argc, char **argv) {
 			++arg_count;
 		}
 	}
+}
+
+int main (int argc, char **argv) {
+	handle_args(argc, argv);
+
 
 	if (arg_count == 0) {
 		fprintf(stderr, "no dice specified, try d6 or 2d20\n");
@@ -41,67 +45,58 @@ int main (int argc, char **argv) {
 	}
 
 	for (int i = 0; i < arg_count; ++i) {
-		int j = 0;
-		bool d_reached = false;
-		bool sign_reached = false;
-		char dice_count_str[8];
-		int dice_count_str_i = 0;
-		char dice_sides_str[8];
-		int dice_sides_str_i = 0;
-		char modifier_str[8];
-		int modifier_str_i = 0;
-		int modifier_sign = 1;
+		// dice values
+		// dice values index -> dvi
+		// 0 - number of dice 
+		// 1 - number of sides
+		// 2 - modifier
 
-		while (args[i][j] != '\0') {
-			if (sign_reached) {
-				modifier_str[modifier_str_i] = args[i][j];
-				++modifier_str_i;
-			} else if (args[i][j] == '+' || args[i][j] == '-') {
-				if (args[i][j] == '-') {
+		char dice_values[3][8];
+		int modifier_sign = 1; // 1 or -1 
+
+		int dvi = 0;
+		int j = 0; // dice_cmd index
+		int k = 0; // dice value char index
+
+		char *dice_cmd = args[i];
+
+		do {
+			if (dice_cmd[j] == 'd') {
+				++dvi;
+				k = 0;
+			} else if (dice_cmd[j] == '+' || dice_cmd[j] == '-') {
+				if (dice_cmd[j] == '-') {
 					modifier_sign = -1;
 				}
-				sign_reached = true;
-			} else if (d_reached) {
-				dice_sides_str[dice_sides_str_i] = args[i][j];
-				++dice_sides_str_i;
-			} else if (args[i][j] == 'd') {
-				d_reached = true;
+				++dvi;
+				k = 0;
 			} else {
-				dice_count_str[dice_count_str_i] = args[i][j];
-				++dice_count_str_i;
+				dice_values[dvi][k] = dice_cmd[j];
+				++k;
 			}
 
 			++j;
-		}
+		} while (dice_cmd[j] != '\0');
 
-		dice_count_str[dice_count_str_i] = '\0';
-		dice_sides_str[dice_sides_str_i] = '\0';
-		modifier_str[modifier_str_i] 	 = '\0';
+		int number_of_dice 	= atoi(dice_values[0]);
+		number_of_dice 		= number_of_dice == 0 ? 1 : number_of_dice; // d20 = 1d20, not 0d20
+		int number_of_sides = atoi(dice_values[1]);
+		int modifier 		= atoi(dice_values[2]) * modifier_sign;
 
-		int dice_count = atoi(dice_count_str);
-		dice_count = dice_count == 0 ? 1 : dice_count;
+		printf("number_of_dice -> %d\n", number_of_dice);
+		printf("number_of_sides -> %d\n", number_of_sides);
+		printf("modifier -> %d\n", modifier);
 
-		int dice_sides = atoi(dice_sides_str);
-		int modifier = atoi(modifier_str) * modifier_sign;
-
-		if (dice_sides == 0) {
+		if (number_of_sides == 0) {
 			fprintf(stderr, "incorrect dice format, try 2d6 or d20\n");
 			return 1;
 		}
 
 		int sum = 0;
 
-		char dice_str[dice_count_str_i + dice_sides_str_i + modifier_str_i + 3];
+		printf("%s -> ", dice_cmd);
 
-		if (modifier == 0) {
-			sprintf(dice_str, "%dd%d", dice_count, dice_sides);
-		} else {
-			sprintf(dice_str, "%dd%d%+d", dice_count, dice_sides, modifier);
-		}
-
-		printf("%s -> ", dice_str);
-
-		for (int k = 0; k < dice_count; ++k) {
+		for (int k = 0; k < number_of_dice; ++k) {
 			unsigned int buf[1];
 			size_t count = sizeof(buf);
 			ssize_t n = read(fd, &buf, count);
@@ -111,7 +106,7 @@ int main (int argc, char **argv) {
 				return 1;
 			}
 
-			unsigned int res = (buf[0] % dice_sides) + 1;
+			unsigned int res = (buf[0] % number_of_sides) + 1;
 			sum += res;
 
 			printf("%d ", res);
