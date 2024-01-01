@@ -83,10 +83,6 @@ int main (int argc, char **argv) {
 		int number_of_sides = atoi(dice_values[1]);
 		int modifier 		= atoi(dice_values[2]) * modifier_sign;
 
-		printf("number_of_dice -> %d\n", number_of_dice);
-		printf("number_of_sides -> %d\n", number_of_sides);
-		printf("modifier -> %d\n", modifier);
-
 		if (number_of_sides == 0) {
 			fprintf(stderr, "incorrect dice format, try 2d6 or d20\n");
 			return 1;
