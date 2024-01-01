@@ -28,4 +28,10 @@ examples:
 
 ## build
 
-`gcc -o dice dice.c`
+Build this program running `make`.
+
+Install system wide running as root `make install`.
+
+Uninstall it removing the binary from `/bin/dice` or using `make uninstall`.
+
+That should work 😉 
