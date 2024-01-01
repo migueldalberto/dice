@@ -14,6 +14,7 @@ int main (int argc, char **argv) {
 		if (argv[i][0] == '-') {
 			int j = 1;
 
+			// the following is for implementing flags, maybe in the future
 			while (argv[i][j] != '\0') {
 				switch (argv[i][j]) {
 					default:
