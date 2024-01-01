@@ -12,5 +12,11 @@ random.o: random.c random.h
 roll.o: roll.c roll.h random.h
 	gcc roll.c -c
 
+install: all
+	cp $(OUT) /bin/
+
+uninstall:
+	rm /bin/$(OUT)
+
 clean:
 	rm *.o -f
