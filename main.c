@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "random.h"
+#include "roll.h"
 
 int arg_count = 0;
 char *args[10];
@@ -41,76 +42,22 @@ int main (int argc, char **argv) {
 	}
 
 	for (int i = 0; i < arg_count; ++i) {
-		// dice values
-		// dice values index -> dvi
-		// 0 - number of dice 
-		// 1 - number of sides
-		// 2 - modifier
-
-		char dice_values[3][8];
-		int modifier_sign = 1; // 1 or -1 
-
-		int dvi = 0;
-		int j = 0; // dice_cmd index
-		int k = 0; // dice value char index
-
 		char *dice_cmd = args[i];
+		roll_t roll;
 
-		do {
-			if (dice_cmd[j] == 'd') {
-				++dvi;
-				k = 0;
-			} else if (dice_cmd[j] == '+' || dice_cmd[j] == '-') {
-				if (dice_cmd[j] == '-') {
-					modifier_sign = -1;
-				}
-				++dvi;
-				k = 0;
-			} else {
-				dice_values[dvi][k] = dice_cmd[j];
-				++k;
-			}
-
-			++j;
-		} while (dice_cmd[j] != '\0');
-
-		int number_of_dice 	= atoi(dice_values[0]);
-		number_of_dice 		= number_of_dice == 0 ? 1 : number_of_dice; // d20 = 1d20, not 0d20
-		int number_of_sides = atoi(dice_values[1]);
-		int modifier 		= atoi(dice_values[2]) * modifier_sign;
-
-		if (number_of_sides == 0) {
-			fprintf(stderr, "incorrect dice format, try 2d6 or d20\n");
+		if (parse_roll(dice_cmd, &roll) < 0) {
+			fprintf(stderr, "invalid roll format :(\n");
 			return 1;
 		}
 
-		int sum = 0;
-
-		printf("%s -> ", dice_cmd);
-
-		for (int k = 0; k < number_of_dice; ++k) {
-			unsigned int random_number;
-
-			if (get_random_uint(&random_number) < 0) {
-				fprintf(stderr, "pseudorng failed :(\n");
-				return 1;
-			}
-
-			int res = (random_number % number_of_sides) + 1;
-			sum += res;
-
-			printf("%d ", res);
+		if (do_roll(&roll) < 0) {
+			fprintf(stderr, "failed to get random number :(\n");
+			return 1;
 		}
 
-		char result_str[100];
+		print_roll(&roll);
 
-		if (modifier == 0) {
-			sprintf(result_str, "= %d\n", sum);
-		} else {
-			sprintf(result_str, "(%d%+d) = %d\n", sum, modifier, sum + modifier);
-		}
-
-		printf(result_str);
+		free(roll.results); // ;)
 	}
 
 	end_random();
