@@ -1,13 +1,15 @@
 #ifndef ROLL_H
 #define ROLL_H
 
+#include <stdint.h>
+
 typedef struct {
 	char *cmd;
-	int amount;
-	int sides;
-	int modifier;
-	int *results;
-	int results_sum;
+	uint32_t amount;
+	uint32_t sides;
+	int32_t modifier;
+	uint32_t *results;
+	uint32_t results_sum;
 } roll_t;
 
 int parse_roll (char *str, roll_t *roll);

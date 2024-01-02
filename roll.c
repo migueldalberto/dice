@@ -4,67 +4,78 @@
 #include <stdio.h>
 
 int parse_roll (char *str, roll_t *roll) {
-		// dice values
-		// dice values index -> dvi
-		// 0 - number of dice 
-		// 1 - number of sides
-		// 2 - modifier
+	char numbers_read[3][20];
+	// 0 - amount
+	// 1 - sides
+	// 2 - mod
+	
+	for (int i = 0; i < 3; ++i) {
+		numbers_read[i][19] = '\0';
+	}
 
-		char dice_values[3][8];
-		int modifier_sign = 1; // 1 or -1 
+	int i = 0;
+	int j = 0;
+	int k = 0;
 
-		int dvi = 0;
-		int j = 0; // str index
-		int k = 0; // dice value char index
+	int modifier_sign = 1;
 
-		do {
-			if (str[j] == 'd') {
-				++dvi;
-				k = 0;
-			} else if (str[j] == '+' || str[j] == '-') {
-				if (str[j] == '-') {
+	while (str[i] != '\0') {
+		if (str[i] - '0' < 0 || str[i] - '9' > 0) {
+			switch (str[i]) {
+				case 'd':
+					if (j != 0) 
+						return -1;
+					k = 0;
+					++j;
+					break;
+				case '+':
+					if (j != 1) 
+						return -1;
+					k = 0;
+					++j;
+					break;
+				case '-':
+					if (j != 1) 
+						return -1;
 					modifier_sign = -1;
-				}
-				++dvi;
-				k = 0;
-			} else if (str[j] - 48 < 0 || str[j] - 57 > 0) {
-				return -1;
-			} else {
-				dice_values[dvi][k] = str[j];
-				++k;
+					k = 0;
+					++j;
+					break;
+				default:
+					return -1;
+					break;
 			}
-
-			++j;
-		} while (str[j] != '\0');
-
-		int number_of_dice 	= atoi(dice_values[0]);
-		number_of_dice 		= number_of_dice == 0 ? 1 : number_of_dice; // d20 = 1d20, not 0d20
-		int number_of_sides = atoi(dice_values[1]);
-		int modifier 		= atoi(dice_values[2]) * modifier_sign;
-
-		if (number_of_sides == 0) {
-			return -1;
+		} else {
+			numbers_read[j][k] = str[i];
+			++k;
 		}
 
-		roll->amount 	= number_of_dice;
-		roll->sides 	= number_of_sides;
-		roll->modifier 	= modifier;
-		roll->cmd 		= str;
+		++i;
+	}
 
-		return 0;
+	uint32_t amount = atoi(numbers_read[0]);
+	uint32_t sides 	= atoi(numbers_read[1]);
+	int32_t  mod	= atoi(numbers_read[2]) * modifier_sign;
+
+	roll->amount 	= amount == 0 ? 1 : amount;
+	roll->sides 	= sides;
+	roll->modifier 	= mod;
+	roll->cmd 		= str;
+
+	return 0;
 }
 
 int do_roll (roll_t *roll) {
-	roll->results = (int *) malloc(roll->amount * sizeof(int));
+	roll->results = (uint32_t *) malloc(roll->amount * sizeof(uint32_t));
 	roll->results_sum = 0;
 
 	for (int k = 0; k < roll->amount; ++k) {
-		unsigned int random_number;
+		uint32_t random_number;
 
 		if (get_random_uint(&random_number) < 0)
 			return -1;
 
-		int res = (random_number % roll->sides) + 1;
+		uint32_t res = (random_number % roll->sides) + 1;
 		roll->results[k] = res;
 		roll->results_sum += res;
 	}
