@@ -1,8 +1,26 @@
 #include "random.h"
-#include <sys/random.h>
 #include <stdint.h>
 
-int fd; // file descriptor
+#ifdef _WIN32
+#include <time.h> 
+#include <stdlib.h> 
+
+int init_random() {
+	srand(time(NULL));
+	return 0;
+}
+
+int get_random_uint(uint32_t *number) {
+	*number = rand(); 
+	return 0;
+}
+
+int end_random() {
+	return 0;
+}
+
+#else
+#include <sys/random.h>
 
 int init_random() {
 	return 0;
@@ -17,3 +35,5 @@ int get_random_uint(uint32_t *number) {
 int end_random() {
 	return 0;
 }
+
+#endif
