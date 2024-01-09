@@ -1,8 +1,9 @@
 # dice
 
 C tool for getting dice rolls.
-This uses /dev/random for its random numbers, 
-which is a special file of Unix-like operating systems.
+
+About its RNG, on Windows, it uses `srand` and `rand` functions from `stdlib.h`.
+On Linux, it uses the `getrandom` syscall.
 
 ## usage
 
